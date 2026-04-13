@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dota Pro Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+:root{--bg-root:#060a12;--bg-primary:#0a0e1a;--bg-secondary:#111827;--bg-card:#141d2e;--bg-card-hover:#1a2640;--border:#1e2d45;--border-bright:#2a3f5f;--border-gold:#c89b3c;--text-primary:#e8d5a3;--text-secondary:#8a9bb0;--text-muted:#3d4f66;--gold:#c89b3c;--gold-light:#e8c87a;--gold-dark:#8a6a1e;--red:#c23b22;--red-light:#e84a1b;--win:#4caf7a;--loss:#cf4f4f;--glow-gold:0 0 18px rgba(200,155,60,.35);--radius-sm:4px;--radius:8px;--radius-lg:12px;--t:.18s ease}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px}
+body{font-family:'Rajdhani',sans-serif;background:var(--bg-root);color:var(--text-primary);min-height:100vh;overflow-x:hidden;background-image:radial-gradient(ellipse 120% 60% at 50% -10%,#1a2a4a33 0%,transparent 70%),url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23c89b3c' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E")}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:var(--bg-primary)}::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--gold-dark)}
+#app-header{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:52px;background:linear-gradient(90deg,#0a0e1a 0%,#0f1628 50%,#0a0e1a 100%);border-bottom:1px solid var(--border-gold);box-shadow:0 2px 20px rgba(200,155,60,.15);position:sticky;top:0;z-index:100}
+.header-left,.header-right{width:180px}.header-right{display:flex;justify-content:flex-end;align-items:center}
+.header-title{display:flex;align-items:center;gap:10px;font-family:'Cinzel',serif;font-size:1.1rem;font-weight:700;color:var(--gold-light);letter-spacing:.12em;text-transform:uppercase;text-shadow:0 0 20px rgba(200,155,60,.5);white-space:nowrap}
+.header-emblem{color:var(--red-light);font-size:1rem}
+.header-badge{font-size:.65rem;font-weight:600;letter-spacing:.08em;color:var(--text-muted);border:1px solid var(--border);padding:2px 8px;border-radius:20px;text-transform:uppercase}
+.back-btn{display:flex;align-items:center;gap:6px;background:none;border:1px solid var(--border-bright);color:var(--text-secondary);font-family:'Rajdhani',sans-serif;font-size:.85rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:5px 14px;border-radius:20px;cursor:pointer;transition:border-color var(--t),color var(--t),box-shadow var(--t)}
+.back-btn:hover{border-color:var(--gold);color:var(--gold-light);box-shadow:var(--glow-gold)}.back-btn__arrow{font-size:1.3rem;line-height:1}
+#main{max-width:1400px;margin:0 auto;padding:0 24px 40px;min-height:calc(100vh - 52px)}
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 52px);gap:32px}
+.loading-emblem{position:relative;width:80px;height:80px}
+.loading-ring{position:absolute;inset:0;border:2px solid transparent;border-top-color:var(--gold);border-radius:50%;animation:spin 1.2s linear infinite}
+.loading-ring--2{inset:10px;border-top-color:var(--red);animation-duration:.9s;animation-direction:reverse}
+.loading-ring--3{inset:22px;border-top-color:var(--gold-light);animation-duration:1.6s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-family:'Cinzel',serif;font-size:1rem;color:var(--text-secondary);letter-spacing:.15em;text-transform:uppercase;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+.error-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 52px);gap:16px;text-align:center}
+.error-icon{font-size:3rem;color:var(--red-light)}.error-title{font-family:'Cinzel',serif;font-size:1.4rem}.error-message{color:var(--text-secondary);font-size:.9rem;max-width:400px}
+.btn{font-family:'Rajdhani',sans-serif;font-size:.9rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:8px 24px;border-radius:var(--radius);cursor:pointer;border:none}
+.btn--primary{background:linear-gradient(135deg,var(--red),var(--red-light));color:#fff;box-shadow:0 2px 12px rgba(194,59,34,.4);transition:opacity var(--t)}.btn--primary:hover{opacity:.85}
+.section-loading{color:var(--text-muted);font-size:.9rem;padding:20px 0;font-style:italic}
+.section-error{color:var(--loss);font-size:.9rem;padding:12px;background:#2a1010;border-radius:var(--radius);border:1px solid var(--loss)}
+.empty-state{color:var(--text-muted);padding:32px 0;text-align:center;font-size:.9rem;line-height:1.6}
+.detail-section{margin-top:36px}
+.section-title{display:flex;align-items:center;gap:10px;font-family:'Cinzel',serif;font-size:1rem;font-weight:700;color:var(--gold-light);letter-spacing:.1em;text-transform:uppercase;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:20px}
+.section-title__icon{font-size:1.1rem}.section-title__sub{margin-left:auto;font-family:'Rajdhani',sans-serif;font-size:.75rem;font-weight:400;color:var(--text-muted);text-transform:none;letter-spacing:0}
+.stat-chip{display:flex;flex-direction:column;align-items:center;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);padding:8px 16px;min-width:80px}
+.stat-chip--win{border-color:#1e4a2a;background:#0d1f13}.stat-chip--loss{border-color:#4a1e1e;background:#1f0d0d}.stat-chip--gold{border-color:var(--gold-dark);background:#1a1508}.stat-chip--large{padding:12px 20px;min-width:100px}
+.stat-chip__label{font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)}.stat-chip__value{font-size:1.2rem;font-weight:700;color:var(--text-primary);margin-top:2px}
+.flag{height:14px;border-radius:2px;vertical-align:middle;margin-right:4px}
+.page-hero{padding:40px 0 32px;text-align:center}
+.page-title{font-family:'Cinzel',serif;font-size:2rem;font-weight:900;color:var(--gold-light);letter-spacing:.12em;text-transform:uppercase;text-shadow:0 0 30px rgba(200,155,60,.4)}
+.page-subtitle{color:var(--text-muted);font-size:.9rem;margin-top:8px}
+.filter-bar{display:flex;align-items:center;gap:12px;padding:16px 0;flex-wrap:wrap;margin-bottom:8px}
+.filter-input,.filter-select{background:var(--bg-card);border:1px solid var(--border-bright);color:var(--text-primary);border-radius:var(--radius);padding:8px 14px;font-family:'Rajdhani',sans-serif;font-size:.9rem;outline:none;transition:border-color var(--t),box-shadow var(--t)}
+.filter-input{flex:1;min-width:200px}.filter-input:focus,.filter-select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,155,60,.12)}.filter-select option{background:var(--bg-card)}
+.filter-sort{display:flex;align-items:center;gap:6px;margin-left:auto}.filter-label{font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)}
+.sort-btn{background:var(--bg-card);border:1px solid var(--border);color:var(--text-secondary);font-family:'Rajdhani',sans-serif;font-size:.8rem;font-weight:600;letter-spacing:.06em;padding:5px 12px;border-radius:20px;cursor:pointer;transition:border-color var(--t),color var(--t)}
+.sort-btn:hover{border-color:var(--border-bright);color:var(--text-primary)}.sort-btn--active{border-color:var(--gold)!important;color:var(--gold)!important;background:rgba(200,155,60,.08)!important}
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;padding-bottom:32px}
+.team-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;cursor:pointer;display:flex;flex-direction:column;gap:14px;transition:border-color var(--t),box-shadow var(--t),transform var(--t),background var(--t);position:relative;overflow:hidden}
+.team-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0;transition:opacity var(--t)}
+.team-card:hover{border-color:var(--gold-dark);background:var(--bg-card-hover);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.4),var(--glow-gold)}.team-card:hover::before{opacity:1}
+.team-card__logo-wrap{display:flex;align-items:center;justify-content:center;height:64px}.team-card__logo{max-height:64px;max-width:120px;object-fit:contain}
+.team-card__logo-fallback{width:64px;height:64px;border-radius:var(--radius);background:var(--bg-secondary);border:1px solid var(--border-bright);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.1rem;font-weight:700;color:var(--gold)}
+.team-card__info{text-align:center}.team-card__name{font-family:'Cinzel',serif;font-size:.95rem;font-weight:700;color:var(--text-primary);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.team-card__tag{font-size:.75rem;color:var(--gold-dark);margin-top:2px}.team-card__region{font-size:.72rem;color:var(--text-muted);margin-top:4px;text-transform:uppercase;letter-spacing:.08em}
+.team-card__stats{display:flex;justify-content:space-between;align-items:center}.team-card__record{font-size:.85rem;font-weight:600}
+.record-win{color:var(--win)}.record-sep{color:var(--text-muted)}.record-loss{color:var(--loss)}.team-card__winpct{font-size:.9rem;font-weight:700}.team-card__rating{font-size:.7rem;color:var(--text-muted)}
+.team-card__roster{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.team-card__avatar{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--border-bright);object-fit:cover;transition:border-color var(--t)}.team-card:hover .team-card__avatar{border-color:var(--gold-dark)}
+.team-detail-page{padding:32px 0}
+.team-detail-header{display:flex;align-items:center;gap:32px;padding:32px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);position:relative;overflow:hidden}
+.team-detail-header::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(200,155,60,.04) 0%,transparent 60%)}
+.team-detail-logo-wrap{flex-shrink:0;display:flex;align-items:center;justify-content:center;width:120px;height:120px}.team-detail-logo{max-width:120px;max-height:120px;object-fit:contain}
+.team-detail-logo-fallback{width:120px;height:120px;border-radius:var(--radius);background:var(--bg-secondary);border:1px solid var(--border-bright);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:2rem;font-weight:700;color:var(--gold)}
+.team-detail-name{font-family:'Cinzel',serif;font-size:1.8rem;font-weight:900;color:var(--text-primary);letter-spacing:.06em}.team-detail-tag{color:var(--gold-dark);font-size:1rem;margin-top:4px}
+.team-detail-stats-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}.team-detail-body{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px}
+@media(max-width:900px){.team-detail-body{grid-template-columns:1fr}}
+.matches-list{display:flex;flex-direction:column;gap:6px;max-height:480px;overflow-y:auto;padding-right:4px}
+.match-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-secondary);transition:border-color var(--t),background var(--t);cursor:pointer}
+.match-row--win{border-left:3px solid var(--win)}.match-row--loss{border-left:3px solid var(--loss)}.match-row:hover{border-color:var(--border-bright);background:var(--bg-card-hover)}
+.match-result-badge{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0}
+.badge--win{background:rgba(76,175,122,.15);color:var(--win);border:1px solid var(--win)}.badge--loss{background:rgba(207,79,79,.15);color:var(--loss);border:1px solid var(--loss)}
+.match-opponent{flex:1;min-width:0}.match-side{font-size:.7rem;color:var(--text-muted);display:block}
+.match-vs{font-size:.85rem;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+.match-opp-logo{height:18px;width:18px;object-fit:contain;flex-shrink:0}
+.match-meta{text-align:right;flex-shrink:0}.match-duration{display:block;font-size:.8rem;font-weight:600;color:var(--text-secondary)}.match-date{display:block;font-size:.7rem;color:var(--text-muted)}
+.roster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.player-card{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;transition:border-color var(--t),box-shadow var(--t),transform var(--t)}
+.player-card:hover{border-color:var(--gold-dark);box-shadow:var(--glow-gold);transform:translateY(-2px)}
+.player-card__avatar-wrap{position:relative}.player-card__avatar{width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid var(--border-bright)}
+.player-card__role-badge{position:absolute;bottom:-4px;right:-4px;width:20px;height:20px;border-radius:50%;background:var(--bg-root);border:1px solid var(--border-bright);display:flex;align-items:center;justify-content:center;font-size:10px}
+.player-card__name{font-weight:700;font-size:.85rem;color:var(--text-primary)}.player-card__role{font-size:.75rem;font-weight:600}.player-card__rank{font-size:.75rem;font-weight:600;margin-top:2px}
+.player-card__region{font-size:.7rem;color:var(--text-muted);display:flex;align-items:center;justify-content:center;margin-top:2px}
+.player-detail-page{padding:32px 0}
+.player-detail-header{display:flex;align-items:center;gap:28px;padding:32px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);position:relative;overflow:hidden}
+.player-detail-header::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(200,155,60,.05) 0%,transparent 50%)}
+.player-detail-avatar-wrap{position:relative;flex-shrink:0}.player-detail-avatar{width:110px;height:110px;border-radius:var(--radius-lg);object-fit:cover;border:2px solid var(--border-bright);box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.player-detail-flag{position:absolute;bottom:-6px;right:-6px;height:22px;border-radius:3px;border:1px solid var(--border-bright);box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.player-detail-info{flex:1}.player-detail-name{font-family:'Cinzel',serif;font-size:1.6rem;font-weight:900;color:var(--text-primary);letter-spacing:.05em}
+.player-detail-team{color:var(--gold-dark);font-size:.95rem;margin-top:4px}.player-detail-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.meta-pill{display:flex;align-items:center;gap:4px;font-size:.78rem;font-weight:600;letter-spacing:.05em;padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg-secondary)}
+.meta-pill--gold{border-color:var(--gold-dark);color:var(--gold);background:rgba(200,155,60,.08)}
+.player-detail-rank{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px}.player-detail-mmr{font-size:.85rem;color:var(--text-muted)}
+.rank-badge{padding:10px 18px;border-radius:var(--radius);border:1px solid;background:rgba(0,0,0,.3);display:flex;flex-direction:column;align-items:center;gap:6px;min-width:120px}
+.rank-badge__name{font-family:'Cinzel',serif;font-size:.95rem;font-weight:700;letter-spacing:.08em}.rank-badge__stars{display:flex;gap:3px}.rank-star{font-size:.85rem}
+.player-stats-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+.hero-stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.hero-stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:border-color var(--t),box-shadow var(--t),transform var(--t)}
+.hero-stat-card:hover{border-color:var(--gold-dark);box-shadow:var(--glow-gold);transform:translateY(-2px)}
+.hero-stat-card__img-wrap{position:relative}.hero-stat-card__img{width:100%;height:80px;object-fit:cover;object-position:center top;display:block}
+.hero-stat-card__games{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.75);color:var(--gold-light);font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:10px}
+.hero-stat-card__info{padding:10px 12px;flex:1}.hero-stat-card__name{font-weight:700;font-size:.9rem;color:var(--text-primary)}.hero-stat-card__winrate{font-size:.8rem;font-weight:600;margin-top:2px}.hero-stat-card__kda{font-size:.75rem;color:var(--text-muted);margin-top:2px}
+.hero-stat-card__cta{padding:6px 12px;font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);border-top:1px solid var(--border);transition:color var(--t),background var(--t)}.hero-stat-card:hover .hero-stat-card__cta{color:var(--gold);background:rgba(200,155,60,.06)}
+.hero-detail-page{padding:32px 0}.hero-detail-header{position:relative;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border);margin-bottom:20px}
+.hero-detail-splash-wrap{position:relative;height:220px}.hero-detail-splash{width:100%;height:100%;object-fit:cover;object-position:center 20%;display:block}
+.hero-detail-splash-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(6,10,18,.95) 0%,rgba(6,10,18,.6) 50%,rgba(6,10,18,.3) 100%)}
+.hero-detail-title{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:32px 40px}
+.hero-detail-player-info{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.hero-detail-player-avatar{width:36px;height:36px;border-radius:50%;border:2px solid var(--border-gold);object-fit:cover}
+.hero-detail-player-name{font-weight:700;color:var(--gold-light);font-size:.9rem}.hero-detail-on{color:var(--text-muted);font-size:.8rem}
+.hero-detail-name{font-family:'Cinzel',serif;font-size:2.2rem;font-weight:900;color:var(--text-primary);letter-spacing:.08em;text-shadow:0 2px 12px rgba(0,0,0,.8)}
+.hero-roles{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}.hero-role-tag{font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:20px;background:rgba(200,155,60,.12);border:1px solid var(--gold-dark);color:var(--gold)}
+.hero-stats-summary{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.build-description{font-size:.85rem;color:var(--text-muted);margin-bottom:20px;line-height:1.5}
+.item-build-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.item-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;transition:border-color var(--t),box-shadow var(--t)}.item-card:hover{border-color:var(--gold-dark);box-shadow:var(--glow-gold)}
+.item-card__rank{position:absolute;top:8px;left:10px;font-size:.65rem;font-weight:700;color:var(--text-muted);font-family:'Cinzel',serif}
+.item-card__img-wrap{width:80px;height:60px;display:flex;align-items:center;justify-content:center}.item-card__img{width:80px;height:60px;object-fit:cover;border-radius:4px}
+.item-card__img-fallback{width:80px;height:60px;border-radius:4px;background:var(--bg-secondary);border:1px solid var(--border-bright);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--text-muted)}
+.item-card__name{font-size:.78rem;font-weight:600;text-align:center;color:var(--text-primary);line-height:1.3}.item-card__pct{font-size:1rem;font-weight:700;color:var(--gold)}
+.item-pct-bar{width:100%;height:3px;background:var(--border);border-radius:2px}.item-pct-bar__fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold-dark),var(--gold));transition:width .6s ease}
+.team-card__rank{position:absolute;top:10px;right:10px;font-family:'Cinzel',serif;font-size:.65rem;font-weight:700;color:var(--gold-dark);letter-spacing:.04em}
+.match-detail-page{padding:32px 0}
+.match-detail-header{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:28px 32px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:24px;flex-wrap:wrap;position:relative;overflow:hidden}
+.match-detail-header::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(200,155,60,.04) 0%,transparent 60%)}
+.match-teams{display:flex;align-items:center;gap:16px;flex:1;min-width:0;flex-wrap:wrap}
+.match-team{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:90px;max-width:140px;text-align:center}
+.match-team-logo{height:52px;max-width:80px;object-fit:contain}.match-team-logo-fb{width:52px;height:52px;border-radius:var(--radius-sm);background:var(--bg-secondary);border:1px solid var(--border-bright);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:.9rem;font-weight:700;color:var(--gold)}
+.match-team-name{font-family:'Cinzel',serif;font-size:.82rem;font-weight:700;color:var(--text-primary);line-height:1.3}
+.match-team-side{font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em}
+.match-team--winner .match-team-name{color:var(--win)}.match-team--loser .match-team-name{color:var(--loss)}
+.match-vs-block{display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0}
+.match-score{font-family:'Cinzel',serif;font-size:2.2rem;font-weight:900;display:flex;align-items:center;gap:10px}
+.score-win{color:var(--win)}.score-sep{color:var(--text-muted);font-size:1.2rem;font-weight:400}.score-loss{color:var(--loss)}
+.match-result-label{font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 10px;border-radius:20px}
+.match-result-label--win{background:rgba(76,175,122,.12);color:var(--win);border:1px solid var(--win)}
+.match-result-label--loss{background:rgba(207,79,79,.12);color:var(--loss);border:1px solid var(--loss)}
+.match-detail-meta{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+.match-detail-two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}@media(max-width:700px){.match-detail-two-col{grid-template-columns:1fr}}
+.draft-col{display:flex;flex-direction:column;gap:6px}
+.draft-team-label{font-family:'Cinzel',serif;font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:6px 0;border-bottom:1px solid var(--border);margin-bottom:6px}
+.draft-sub-label{font-size:.65rem;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase;margin-top:10px;margin-bottom:4px}
+.draft-pick-row{display:flex;align-items:center;gap:10px;padding:5px 8px;border-radius:var(--radius-sm);background:var(--bg-secondary);border:1px solid var(--border)}
+.draft-pick-row--ban{opacity:.45;border-style:dashed;background:transparent}
+.draft-hero-img{width:48px;height:27px;border-radius:3px;object-fit:cover;object-position:center top;flex-shrink:0}
+.draft-hero-name{font-size:.8rem;font-weight:600;color:var(--text-primary);flex:1}
+.draft-order{font-size:.65rem;color:var(--text-muted);font-family:'Cinzel',serif;flex-shrink:0}
+.perf-col{display:flex;flex-direction:column;gap:5px}
+.player-perf-row{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:var(--radius-sm);background:var(--bg-secondary);border:1px solid var(--border)}
+.perf-hero-img{width:48px;height:27px;border-radius:3px;object-fit:cover;object-position:center top;flex-shrink:0}
+.perf-info{flex:1;min-width:0}.perf-name{font-size:.8rem;font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.perf-kda{font-size:.72rem;color:var(--text-muted);margin-top:1px}
+.perf-right{text-align:right;flex-shrink:0}.perf-nw{font-size:.78rem;font-weight:600;color:var(--gold)}.perf-gpm{font-size:.68rem;color:var(--text-muted)}
+  </style>
+</head>
+<body>
+  <header id="app-header">
+    <div class="header-left">
+      <button id="back-btn" class="back-btn" hidden>
+        <span class="back-btn__arrow">&#8249;</span> Back
+      </button>
+    </div>
+    <div class="header-title">
+      <span class="header-emblem">&#9876;</span>
+      Dota Pro Tracker
+      <span class="header-emblem">&#9876;</span>
+    </div>
+    <div class="header-right">
+      <span class="header-badge">OpenDota</span>
+    </div>
+  </header>
+
+  <main id="main"></main>
+
+<script>
+// ─── API ──────────────────────────────────────────────────────────────────────
+const BASE = 'https://api.opendota.com/api';
+const cache = new Map();
+const TTL = 5 * 60 * 1000;
+
+async function apiGet(url) {
+  const hit = cache.get(url);
+  if (hit && Date.now() - hit.ts < TTL) return hit.data;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('API ' + r.status + ': ' + url);
+  const data = await r.json();
+  cache.set(url, { data, ts: Date.now() });
+  return data;
+}
+
+const api = {
+  proPlayers:           ()          => apiGet(BASE + '/proPlayers'),
+  teams:                ()          => apiGet(BASE + '/teams'),
+  heroes:               ()          => apiGet(BASE + '/heroes'),
+  itemIds:              ()          => apiGet(BASE + '/constants/item_ids'),
+  teamMatches:          (id)        => apiGet(BASE + '/teams/' + id + '/matches'),
+  player:               (id)        => apiGet(BASE + '/players/' + id),
+  playerHeroes:         (id)        => apiGet(BASE + '/players/' + id + '/heroes'),
+  playerMatchesForHero: (id, hero)  => apiGet(BASE + '/players/' + id + '/matches?hero_id=' + hero + '&limit=30'),
+  fullMatch:            (id)        => apiGet(BASE + '/matches/' + id),
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function esc(v) {
+  return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+const RANK_NAMES  = ['','Herald','Guardian','Crusader','Archon','Legend','Ancient','Divine','Immortal'];
+const RANK_COLORS = ['','#7d8fa3','#22a065','#0ea5c9','#3b7ee8','#8b5cf6','#c026d3','#d97706','#ef4444'];
+
+function getRankName(t) {
+  if (!t) return 'Unranked';
+  const r = Math.floor(t/10), s = t%10;
+  if (r >= 8) return 'Immortal';
+  if (r < 1 || r > 7) return 'Unranked';
+  return RANK_NAMES[r] + ' ' + s;
+}
+function getRankColor(t) {
+  if (!t) return '#7d8fa3';
+  return RANK_COLORS[Math.min(Math.floor(t/10), 8)] || '#7d8fa3';
+}
+function getRankStars(t) {
+  if (!t) return 0;
+  const r = Math.floor(t/10);
+  return r >= 8 ? 0 : (t % 10);
+}
+
+const C2R = {
+  US:'North America',CA:'North America',MX:'North America',
+  BR:'South America',AR:'South America',PE:'South America',CL:'South America',CO:'South America',UY:'South America',
+  SE:'Western Europe',NO:'Western Europe',DK:'Western Europe',FI:'Western Europe',PL:'Western Europe',
+  DE:'Western Europe',FR:'Western Europe',GB:'Western Europe',NL:'Western Europe',ES:'Western Europe',
+  IT:'Western Europe',CZ:'Western Europe',RO:'Western Europe',BE:'Western Europe',AT:'Western Europe',
+  CH:'Western Europe',PT:'Western Europe',GR:'Western Europe',HU:'Western Europe',SK:'Western Europe',
+  RU:'CIS',UA:'CIS',BY:'CIS',KZ:'CIS',GE:'CIS',AM:'CIS',AZ:'CIS',UZ:'CIS',
+  CN:'China',
+  PH:'Southeast Asia',MY:'Southeast Asia',SG:'Southeast Asia',TH:'Southeast Asia',
+  ID:'Southeast Asia',VN:'Southeast Asia',MM:'Southeast Asia',KH:'Southeast Asia',
+  IN:'South Asia',BD:'South Asia',PK:'South Asia',
+  JO:'Middle East',SA:'Middle East',EG:'Middle East',IL:'Middle East',TR:'Middle East',IR:'Middle East',
+  AU:'Oceania',NZ:'Oceania',
+  JP:'East Asia',KR:'East Asia',TW:'East Asia',HK:'East Asia',MN:'East Asia',
+};
+function getRegion(cc) { return cc ? (C2R[cc.toUpperCase()] || 'Unknown') : 'Unknown'; }
+function getRole(r) { return r === 2 ? 'Support' : r === 1 ? 'Core' : 'Unknown'; }
+
+function fmtDate(ts) {
+  if (!ts) return '-';
+  return new Date(ts*1000).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+function fmtDur(s) {
+  if (!s) return '0:00';
+  return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
+}
+function winRate(w, g) { return g ? ((w/g)*100).toFixed(1) : '0.0'; }
+
+function heroImgUrl(name)  { return 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/' + name.replace('npc_dota_hero_','') + '.png'; }
+function heroCropUrl(name) { return 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/crops/' + name.replace('npc_dota_hero_','') + '.png'; }
+function itemImgUrl(name)  { return 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/' + name + '.png'; }
+function flagUrl(cc)       { return cc ? 'https://flagcdn.com/w40/' + cc.toLowerCase() + '.png' : null; }
+
+function analyzeItemBuild(matches, itemIds) {
+  const counts = {};
+  let total = 0;
+  for (const m of matches) {
+    const slots = [m.item_0, m.item_1, m.item_2, m.item_3, m.item_4, m.item_5];
+    if (!slots.some(id => id > 0)) continue;
+    total++;
+    const seen = new Set();
+    for (const id of slots) {
+      if (!id || id === 0) continue;
+      let name = itemIds[id] || itemIds[String(id)];
+      if (!name) continue;
+      name = name.replace(/^item_/, '');
+      if (name.startsWith('recipe_') || seen.has(name)) continue;
+      seen.add(name);
+      counts[name] = (counts[name] || 0) + 1;
+    }
+  }
+  return Object.entries(counts)
+    .map(([name, count]) => ({ name, count, pct: total ? Math.round((count/total)*100) : 0 }))
+    .sort((a,b) => b.count - a.count)
+    .slice(0, 8);
+}
+
+// ─── State ────────────────────────────────────────────────────────────────────
+const S = {
+  teamMap: {}, activeTeams: [], playersByTeam: {}, heroMap: {},
+  navStack: [], teamSearch: '', teamRegion: 'All', teamSort: 'rating',
+};
+
+const $main = document.getElementById('main');
+const $back = document.getElementById('back-btn');
+const FALLBACK_AVATAR = 'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/avatars/fe/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_medium.jpg';
+
+// ─── Navigation ───────────────────────────────────────────────────────────────
+function navigate(view, payload) {
+  S.navStack.push({ view, payload: payload || {} });
+  render(); window.scrollTo(0,0);
+}
+function goBack() {
+  if (S.navStack.length > 1) { S.navStack.pop(); render(); window.scrollTo(0,0); }
+}
+function render() {
+  const { view, payload } = S.navStack[S.navStack.length - 1];
+  $back.hidden = S.navStack.length <= 1;
+  if (view === 'teams')  showTeamsView();
+  if (view === 'team')   showTeamView(payload);
+  if (view === 'player') showPlayerView(payload);
+  if (view === 'hero')   showHeroView(payload);
+  if (view === 'match')  showMatchView(payload);
+}
+
+// ─── DOM helpers ──────────────────────────────────────────────────────────────
+function setSlot(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+function slotLoading(id, msg) { setSlot(id, '<div class="section-loading">' + esc(msg) + '</div>'); }
+function slotError(id, msg)   { setSlot(id, '<div class="section-error">' + esc(msg) + '</div>'); }
+
+function rankBadgeHtml(t) {
+  const name = getRankName(t), color = getRankColor(t), stars = getRankStars(t);
+  const starsHtml = stars > 0
+    ? '<div class="rank-badge__stars">' + Array.from({length:5}).map((_,i) =>
+        '<span class="rank-star" style="color:' + (i<stars?color:'#333') + '">&#9733;</span>').join('') + '</div>'
+    : '';
+  return '<div class="rank-badge" style="border-color:' + color + ';box-shadow:0 0 12px ' + color + '55">' +
+    '<div class="rank-badge__name" style="color:' + color + '">' + esc(name) + '</div>' + starsHtml + '</div>';
+}
+
+// ─── Teams View ───────────────────────────────────────────────────────────────
+const REGIONS = ['All','Western Europe','CIS','North America','South America','China','Southeast Asia','South Asia','East Asia','Middle East','Oceania'];
+
+function teamCardHtml(team, rank) {
+  const players = S.playersByTeam[team.team_id] || [];
+  const wins = team.wins||0, losses = team.losses||0, total = wins+losses;
+  const wp = total ? Math.round((wins/total)*100) : 0;
+  const region = [...new Set(players.map(p => getRegion(p.country_code)).filter(r => r !== 'Unknown'))][0] || 'Unknown';
+  const logoHtml = team.logo_url ? '<img class="team-card__logo" src="' + esc(team.logo_url) + '" alt="' + esc(team.name) + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' : '';
+  const fbStyle = team.logo_url ? 'style="display:none"' : '';
+  const avatars = players.slice(0,5).map(p =>
+    '<img class="team-card__avatar" src="' + esc(p.avatarmedium||p.avatar||FALLBACK_AVATAR) + '" alt="' + esc(p.name||p.personaname) + '" title="' + esc(p.name||p.personaname) + '" onerror="this.src=\'' + FALLBACK_AVATAR + '\'">'
+  ).join('');
+  const rankBadge = rank ? '<div class="team-card__rank">#' + rank + '</div>' : '';
+  return '<div class="team-card" data-team-id="' + team.team_id + '" role="button" tabindex="0">' +
+    rankBadge +
+    '<div class="team-card__logo-wrap">' + logoHtml + '<div class="team-card__logo-fallback" ' + fbStyle + '>' + esc((team.tag||team.name||'?').slice(0,3)) + '</div></div>' +
+    '<div class="team-card__info"><div class="team-card__name">' + esc(team.name) + '</div><div class="team-card__tag">[' + esc(team.tag||'—') + ']</div><div class="team-card__region">' + esc(region) + '</div></div>' +
+    '<div class="team-card__stats"><div class="team-card__record"><span class="record-win">' + wins + 'W</span><span class="record-sep"> / </span><span class="record-loss">' + losses + 'L</span></div>' +
+    '<div class="team-card__winpct" style="color:' + (wp>=50?'var(--win)':'var(--loss)') + '">' + wp + '%</div>' +
+    '<div class="team-card__rating">' + (team.rating ? Math.round(team.rating)+' pts' : '—') + '</div></div>' +
+    '<div class="team-card__roster">' + avatars + '</div></div>';
+}
+
+const ACTIVE_CUTOFF = Date.now()/1000 - 180*24*3600; // 6 months ago
+
+function filteredTeams() {
+  let list = S.activeTeams;
+  if (S.teamSearch) { const q = S.teamSearch.toLowerCase(); list = list.filter(t => (t.name||'').toLowerCase().includes(q)||(t.tag||'').toLowerCase().includes(q)); }
+  if (S.teamRegion !== 'All') list = list.filter(t => (S.playersByTeam[t.team_id]||[]).some(p => getRegion(p.country_code) === S.teamRegion));
+  if (S.teamSort === 'rating') {
+    // Split into recently active (get rank badges) and inactive (no badge), each sorted by rating
+    const recent   = list.filter(t => t.last_match_time && t.last_match_time > ACTIVE_CUTOFF).sort((a,b)=>(b.rating||0)-(a.rating||0));
+    const inactive = list.filter(t => !t.last_match_time || t.last_match_time <= ACTIVE_CUTOFF).sort((a,b)=>(b.rating||0)-(a.rating||0));
+    S._recentTeamIds = new Set(recent.map(t => t.team_id));
+    S._recentRankMap = {};
+    recent.forEach((t,i) => { S._recentRankMap[t.team_id] = i+1; });
+    return [...recent, ...inactive];
+  }
+  S._recentTeamIds = null; S._recentRankMap = {};
+  if (S.teamSort === 'wins') return [...list].sort((a,b)=>(b.wins||0)-(a.wins||0));
+  if (S.teamSort === 'name') return [...list].sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  return list;
+}
+
+function showTeamsView() {
+  const total = Object.values(S.playersByTeam).flat().length;
+  $main.innerHTML =
+    '<div class="team-grid-page">' +
+    '<div class="page-hero"><h1 class="page-title">Professional Teams</h1>' +
+    '<p class="page-subtitle">' + S.activeTeams.length + ' active teams &middot; ' + total + ' registered pros</p></div>' +
+    '<div class="filter-bar">' +
+    '<input id="team-search" class="filter-input" type="text" placeholder="Search teams..." value="' + esc(S.teamSearch) + '" autocomplete="off">' +
+    '<select id="region-filter" class="filter-select">' + REGIONS.map(r => '<option value="' + r + '"' + (r===S.teamRegion?' selected':'') + '>' + r + '</option>').join('') + '</select>' +
+    '<div class="filter-sort"><span class="filter-label">Sort:</span>' +
+    ['rating','wins','name'].map(s => '<button class="sort-btn' + (S.teamSort===s?' sort-btn--active':'') + '" data-sort="' + s + '">' + (s==='rating'?'Rating':s==='wins'?'Wins':'Name') + '</button>').join('') +
+    '</div></div>' +
+    '<div id="team-grid-inner" class="team-grid">' + (filteredTeams().map(t=>teamCardHtml(t,(S._recentRankMap&&S._recentRankMap[t.team_id])||null)).join('')||'<div class="empty-state">No teams found.</div>') + '</div></div>';
+}
+
+function refreshTeamGrid() {
+  setSlot('team-grid-inner', filteredTeams().map(t=>teamCardHtml(t,(S._recentRankMap&&S._recentRankMap[t.team_id])||null)).join('') || '<div class="empty-state">No teams found.</div>');
+}
+
+// ─── Team Detail View ─────────────────────────────────────────────────────────
+function matchRowHtml(match, teamId) {
+  const won  = match.radiant ? match.radiant_win : !match.radiant_win;
+  const side = match.radiant ? '&#127807; Radiant' : '&#128293; Dire';
+  const oppName = match.opposing_team_name || (S.teamMap[match.opposing_team_id] && S.teamMap[match.opposing_team_id].name) || (match.opposing_team_id ? 'Team #' + match.opposing_team_id : 'Unknown');
+  const logo = match.opposing_team_logo ? '<img class="match-opp-logo" src="' + esc(match.opposing_team_logo) + '" alt="" onerror="this.style.display=\'none\'">' : '';
+  const summary = esc(JSON.stringify({ match_id:match.match_id, radiant_win:match.radiant_win, radiant:match.radiant,
+    opposing_team_name:match.opposing_team_name, opposing_team_logo:match.opposing_team_logo,
+    opposing_team_id:match.opposing_team_id, duration:match.duration, start_time:match.start_time,
+    radiant_score:match.radiant_score, dire_score:match.dire_score, league_name:match.league_name }));
+  return '<div class="match-row ' + (won?'match-row--win':'match-row--loss') + '" data-match-id="' + match.match_id + '" data-team-id="' + (teamId||0) + '" data-match=\'' + summary + '\' role="button" tabindex="0" title="Click to view match details">' +
+    '<div class="match-result-badge ' + (won?'badge--win':'badge--loss') + '">' + (won?'W':'L') + '</div>' +
+    '<div class="match-opponent"><span class="match-side">' + side + '</span><span class="match-vs">' + logo + 'vs ' + esc(oppName) + '</span></div>' +
+    '<div class="match-meta"><span class="match-duration">' + fmtDur(match.duration) + '</span><span class="match-date">' + fmtDate(match.start_time) + '</span></div>' +
+    '<div style="font-size:.7rem;color:var(--text-muted);flex-shrink:0;padding-left:4px">&#8250;</div></div>';
+}
+
+function playerCardHtml(player) {
+  const rName = player.rank_tier ? getRankName(player.rank_tier) : '—', rColor = getRankColor(player.rank_tier);
+  const role = getRole(player.fantasy_role), region = getRegion(player.country_code);
+  const flag = flagUrl(player.country_code);
+  const roleColor = role==='Support'?'#60a5fa':role==='Core'?'#f97316':'#888';
+  const roleEmoji = role==='Support'?'&#128737;':role==='Core'?'&#9876;':'?';
+  const pd = JSON.stringify({ account_id:player.account_id, name:player.name, personaname:player.personaname,
+    team_name:player.team_name, team_tag:player.team_tag, avatar:player.avatar,
+    avatarmedium:player.avatarmedium, avatarfull:player.avatarfull,
+    country_code:player.country_code, fantasy_role:player.fantasy_role, rank_tier:player.rank_tier });
+  return '<div class="player-card" data-player=\'' + esc(pd) + '\' role="button" tabindex="0">' +
+    '<div class="player-card__avatar-wrap"><img class="player-card__avatar" src="' + esc(player.avatarfull||player.avatarmedium||player.avatar||FALLBACK_AVATAR) + '" alt="' + esc(player.name||player.personaname) + '" onerror="this.src=\'' + FALLBACK_AVATAR + '\'">' +
+    '<div class="player-card__role-badge">' + roleEmoji + '</div></div>' +
+    '<div class="player-card__info"><div class="player-card__name">' + esc(player.name||player.personaname||'Unknown') + '</div>' +
+    '<div class="player-card__role" style="color:' + roleColor + '">' + esc(role) + '</div>' +
+    '<div class="player-card__rank" id="prank-' + player.account_id + '" style="color:' + rColor + '">' + esc(rName) + '</div>' +
+    '<div class="player-card__region">' + (flag?'<img class="flag" src="'+flag+'" alt="" onerror="this.style.display=\'none\'">':'') + esc(region) + '</div></div></div>';
+}
+
+async function showTeamView({ teamId }) {
+  const team = S.teamMap[teamId];
+  if (!team) { $main.innerHTML = '<div class="empty-state">Team not found.</div>'; return; }
+  const players = S.playersByTeam[teamId] || [];
+  const wins = team.wins||0, losses = team.losses||0, total = wins+losses;
+  const wp = total ? Math.round((wins/total)*100) : 0;
+  const logoHtml = team.logo_url ? '<img class="team-detail-logo" src="' + esc(team.logo_url) + '" alt="' + esc(team.name) + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' : '';
+  const fbStyle = team.logo_url ? 'style="display:none"' : '';
+  $main.innerHTML =
+    '<div class="team-detail-page"><div class="team-detail-header">' +
+    '<div class="team-detail-logo-wrap">' + logoHtml + '<div class="team-detail-logo-fallback" ' + fbStyle + '>' + esc((team.tag||team.name||'?').slice(0,3)) + '</div></div>' +
+    '<div class="team-detail-title"><h1 class="team-detail-name">' + esc(team.name) + '</h1><div class="team-detail-tag">[' + esc(team.tag||'—') + ']</div>' +
+    '<div class="team-detail-stats-row">' +
+    '<div class="stat-chip stat-chip--win"><span class="stat-chip__label">Wins</span><span class="stat-chip__value">' + wins + '</span></div>' +
+    '<div class="stat-chip stat-chip--loss"><span class="stat-chip__label">Losses</span><span class="stat-chip__value">' + losses + '</span></div>' +
+    '<div class="stat-chip"><span class="stat-chip__label">Win Rate</span><span class="stat-chip__value" style="color:' + (wp>=50?'var(--win)':'var(--loss)') + '">' + wp + '%</span></div>' +
+    (team.rating?'<div class="stat-chip stat-chip--gold"><span class="stat-chip__label">Rating</span><span class="stat-chip__value">'+Math.round(team.rating)+'</span></div>':'') +
+    '</div></div></div>' +
+    '<div class="team-detail-body">' +
+    '<section class="detail-section"><h2 class="section-title"><span class="section-title__icon">&#128220;</span> Recent Matches</h2><div id="matches-slot"><div class="section-loading">Loading matches...</div></div></section>' +
+    '<section class="detail-section"><h2 class="section-title"><span class="section-title__icon">&#9876;</span> Roster (' + players.length + ')</h2><div class="roster-grid">' + (players.map(playerCardHtml).join('')||'<div class="empty-state">No players.</div>') + '</div></section>' +
+    '</div></div>';
+  // Fetch player ranks in the background (proPlayers doesn't include rank_tier)
+  const rosterPlayers = S.playersByTeam[teamId] || [];
+  rosterPlayers.forEach(async (p) => {
+    try {
+      const pd = await api.player(p.account_id);
+      const rankTier = (pd && pd.rank_tier) || (pd && pd.leaderboard_rank ? 80 : null);
+      if (rankTier) {
+        const el = document.getElementById('prank-' + p.account_id);
+        if (el) { el.style.color = getRankColor(rankTier); el.textContent = getRankName(rankTier); }
+      }
+    } catch(e) {}
+  });
+
+  try {
+    const matches = await api.teamMatches(teamId);
+    const top20 = matches.slice(0,20);
+    setSlot('matches-slot', top20.length
+      ? '<div class="matches-list">' + top20.map(m => matchRowHtml(m, teamId)).join('') + '</div>'
+      : '<div class="empty-state">No recent matches found.</div>');
+  } catch(e) { slotError('matches-slot', 'Failed to load matches: ' + e.message); }
+}
+
+// ─── Player Detail View ───────────────────────────────────────────────────────
+async function showPlayerView({ player }) {
+  const flag = flagUrl(player.country_code), role = getRole(player.fantasy_role), region = getRegion(player.country_code);
+  const roleColor = role==='Support'?'#60a5fa':role==='Core'?'#f97316':'#888';
+  const roleEmoji = role==='Support'?'&#128737;':role==='Core'?'&#9876;':'?';
+  $main.innerHTML =
+    '<div class="player-detail-page"><div class="player-detail-header">' +
+    '<div class="player-detail-avatar-wrap"><img class="player-detail-avatar" src="' + esc(player.avatarfull||player.avatarmedium||FALLBACK_AVATAR) + '" alt="' + esc(player.name||player.personaname) + '" onerror="this.src=\'' + FALLBACK_AVATAR + '\'">' +
+    (flag?'<img class="player-detail-flag" src="'+flag+'" alt="'+esc(player.country_code)+'" onerror="this.style.display=\'none\'">':'') + '</div>' +
+    '<div class="player-detail-info"><h1 class="player-detail-name">' + esc(player.name||player.personaname||'Unknown') + '</h1>' +
+    (player.team_name?'<div class="player-detail-team">'+(player.team_tag?'['+esc(player.team_tag)+'] ':'')+esc(player.team_name)+'</div>':'') +
+    '<div class="player-detail-meta">' +
+    '<span class="meta-pill" style="background:' + (role==='Support'?'#1e3a5f':'#3d1a0a') + ';color:' + roleColor + '">' + roleEmoji + ' ' + esc(role) + '</span>' +
+    '<span class="meta-pill">' + (flag?'<img class="flag" src="'+flag+'" alt="" onerror="this.style.display=\'none\'">':'') + esc(region) + '</span>' +
+    '</div></div>' +
+    '<div class="player-detail-rank" id="rank-slot"><div class="section-loading">...</div></div></div>' +
+    '<div id="stats-row-slot"></div>' +
+    '<section class="detail-section"><h2 class="section-title"><span class="section-title__icon">&#127942;</span> Most Played Heroes<span class="section-title__sub">Click a hero to view item build</span></h2>' +
+    '<div id="heroes-slot"><div class="section-loading">Loading hero stats...</div></div></section></div>';
+
+  try {
+    const [pd, heroStats] = await Promise.all([api.player(player.account_id), api.playerHeroes(player.account_id)]);
+    const rankTier = (pd && pd.rank_tier) || player.rank_tier || (pd && pd.leaderboard_rank ? 80 : null);
+    const lbRank = pd && pd.leaderboard_rank;
+    setSlot('rank-slot', rankBadgeHtml(rankTier) +
+      (lbRank ? '<div class="player-detail-mmr">Leaderboard #' + lbRank + '</div>' :
+       (pd && pd.mmr_estimate && pd.mmr_estimate.estimate ? '<div class="player-detail-mmr">~' + pd.mmr_estimate.estimate + ' MMR</div>' : '')));
+    if (pd && pd.win !== undefined) {
+      const wr = winRate(pd.win, pd.win + pd.lose);
+      setSlot('stats-row-slot', '<div class="player-stats-row">' +
+        '<div class="stat-chip stat-chip--win"><span class="stat-chip__label">Wins</span><span class="stat-chip__value">'+pd.win+'</span></div>' +
+        '<div class="stat-chip stat-chip--loss"><span class="stat-chip__label">Losses</span><span class="stat-chip__value">'+pd.lose+'</span></div>' +
+        '<div class="stat-chip"><span class="stat-chip__label">Win Rate</span><span class="stat-chip__value" style="color:'+(wr>=50?'var(--win)':'var(--loss)')+'">'+wr+'%</span></div>' +
+        (pd.leaderboard_rank?'<div class="stat-chip stat-chip--gold"><span class="stat-chip__label">Rank</span><span class="stat-chip__value">#'+pd.leaderboard_rank+'</span></div>':'') +
+        '</div>');
+    }
+    const top = heroStats.sort((a,b)=>b.games-a.games).slice(0,12);
+    if (!top.length) { setSlot('heroes-slot','<div class="empty-state">No hero data available.</div>'); return; }
+    const cards = top.map(hs => {
+      const hero = S.heroMap[hs.hero_id];
+      if (!hero) return '';
+      const wr2 = parseFloat(winRate(hs.win, hs.games));
+      const pd2 = JSON.stringify({ account_id:player.account_id, name:player.name, personaname:player.personaname,
+        avatar:player.avatar, avatarmedium:player.avatarmedium, avatarfull:player.avatarfull,
+        country_code:player.country_code, fantasy_role:player.fantasy_role,
+        team_name:player.team_name, team_tag:player.team_tag, rank_tier:player.rank_tier });
+      return '<div class="hero-stat-card" data-hero-id="'+hero.id+'" data-hero-stat=\''+esc(JSON.stringify(hs))+'\' data-player=\''+esc(pd2)+'\' role="button" tabindex="0">' +
+        '<div class="hero-stat-card__img-wrap"><img class="hero-stat-card__img" src="'+heroCropUrl(hero.name)+'" alt="'+esc(hero.localized_name)+'" onerror="this.src=\''+heroImgUrl(hero.name)+'\'"><div class="hero-stat-card__games">'+hs.games+'g</div></div>' +
+        '<div class="hero-stat-card__info"><div class="hero-stat-card__name">'+esc(hero.localized_name)+'</div>' +
+        '<div class="hero-stat-card__winrate" style="color:'+(wr2>=50?'var(--win)':'var(--loss)')+'">'+wr2+'% WR</div>' +
+        '<div class="hero-stat-card__kda">'+(hs.kda?hs.kda.toFixed(2)+' KDA':'—')+'</div></div>' +
+        '<div class="hero-stat-card__cta">View Build &rsaquo;</div></div>';
+    }).join('');
+    setSlot('heroes-slot', '<div class="hero-stats-grid">'+cards+'</div>');
+  } catch(e) { slotError('rank-slot',''); slotError('heroes-slot','Failed to load: '+e.message); }
+}
+
+// ─── Hero Detail View ─────────────────────────────────────────────────────────
+async function showHeroView({ hero, player, heroStat }) {
+  const wr = parseFloat(winRate(heroStat && heroStat.win, heroStat && heroStat.games));
+  const rolesHtml = (hero.roles||[]).map(r => '<span class="hero-role-tag">'+esc(r)+'</span>').join('');
+  $main.innerHTML =
+    '<div class="hero-detail-page"><div class="hero-detail-header"><div class="hero-detail-splash-wrap">' +
+    '<img class="hero-detail-splash" src="'+heroImgUrl(hero.name)+'" alt="'+esc(hero.localized_name)+'" onerror="this.style.display=\'none\'">' +
+    '<div class="hero-detail-splash-overlay"></div></div>' +
+    '<div class="hero-detail-title"><div class="hero-detail-player-info">' +
+    '<img class="hero-detail-player-avatar" src="'+esc(player.avatarmedium||player.avatar||FALLBACK_AVATAR)+'" alt="'+esc(player.name||player.personaname)+'" onerror="this.src=\''+FALLBACK_AVATAR+'\'">' +
+    '<span class="hero-detail-player-name">'+esc(player.name||player.personaname)+'</span>' +
+    '<span class="hero-detail-on">playing</span></div>' +
+    '<h1 class="hero-detail-name">'+esc(hero.localized_name)+'</h1>' +
+    '<div class="hero-roles">'+rolesHtml+'</div></div></div>' +
+    (heroStat ?
+      '<div class="hero-stats-summary">' +
+      '<div class="stat-chip stat-chip--large"><span class="stat-chip__label">Games</span><span class="stat-chip__value">'+(heroStat.games||0)+'</span></div>' +
+      '<div class="stat-chip stat-chip--large stat-chip--win"><span class="stat-chip__label">Wins</span><span class="stat-chip__value">'+(heroStat.win||0)+'</span></div>' +
+      '<div class="stat-chip stat-chip--large stat-chip--loss"><span class="stat-chip__label">Losses</span><span class="stat-chip__value">'+((heroStat.games||0)-(heroStat.win||0))+'</span></div>' +
+      '<div class="stat-chip stat-chip--large"><span class="stat-chip__label">Win Rate</span><span class="stat-chip__value" style="color:'+(wr>=50?'var(--win)':'var(--loss)')+'">'+wr+'%</span></div>' +
+      (heroStat.kda?'<div class="stat-chip stat-chip--large"><span class="stat-chip__label">Avg KDA</span><span class="stat-chip__value">'+heroStat.kda.toFixed(2)+'</span></div>':'') +
+      (heroStat.last_played?'<div class="stat-chip stat-chip--large"><span class="stat-chip__label">Last Played</span><span class="stat-chip__value">'+fmtDate(heroStat.last_played)+'</span></div>':'') +
+      '</div>' : '') +
+    '<section class="detail-section"><h2 class="section-title" id="items-title"><span class="section-title__icon">&#127960;</span> Favorite Finishing Build</h2>' +
+    '<div id="items-slot"><div class="section-loading">Fetching match history...</div></div></section></div>';
+
+  try {
+    const [matches, itemIds] = await Promise.all([api.playerMatchesForHero(player.account_id, hero.id), api.itemIds()]);
+    if (!matches.length) {
+      setSlot('items-slot', '<div class="empty-state">No recent matches found for ' + esc(player.name||player.personaname) + ' on ' + esc(hero.localized_name) + '.<br>OpenDota may not be tracking this player\'s match history.</div>');
+      return;
+    }
+    const titleEl = document.getElementById('items-title');
+    if (titleEl) titleEl.innerHTML = '<span class="section-title__icon">&#127960;</span> Favorite Finishing Build <span class="section-title__sub">from last ' + matches.length + ' matches</span>';
+
+    let buildMatches = matches;
+    if (!matches.some(m => m.item_0 > 0)) {
+      setSlot('items-slot', '<div class="section-loading">Fetching item data from ' + Math.min(matches.length,12) + ' matches...</div>');
+      const detailed = await Promise.all(matches.slice(0,12).map(async m => {
+        try { const full = await api.fullMatch(m.match_id); return full && full.players && full.players.find(p => p.account_id === player.account_id) || null; }
+        catch { return null; }
+      }));
+      buildMatches = detailed.filter(Boolean);
+    }
+
+    const items = analyzeItemBuild(buildMatches, itemIds);
+    if (!items.length) {
+      setSlot('items-slot', '<div class="empty-state">Match data was found but contained no item records.<br>This player may have match history tracking disabled on OpenDota.</div>');
+      return;
+    }
+    const cards = items.map((item, i) =>
+      '<div class="item-card"><div class="item-card__rank">#'+(i+1)+'</div>' +
+      '<div class="item-card__img-wrap"><img class="item-card__img" src="'+itemImgUrl(item.name)+'" alt="'+esc(item.name)+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
+      '<div class="item-card__img-fallback" style="display:none">'+esc(item.name.slice(0,3).toUpperCase())+'</div></div>' +
+      '<div class="item-card__name">'+esc(item.name.split('_').map(w=>w[0].toUpperCase()+w.slice(1)).join(' '))+'</div>' +
+      '<div class="item-card__pct">'+item.pct+'%</div>' +
+      '<div class="item-pct-bar"><div class="item-pct-bar__fill" style="width:'+item.pct+'%"></div></div></div>'
+    ).join('');
+    setSlot('items-slot', '<p class="build-description">Items ranked by how often they appear in ' + esc(player.name||player.personaname) + '\'s finished builds on ' + esc(hero.localized_name) + '.</p><div class="item-build-grid">'+cards+'</div>');
+  } catch(e) { slotError('items-slot', 'Failed to load: ' + e.message); }
+}
+
+// ─── Match Detail View ────────────────────────────────────────────────────────
+async function showMatchView({ matchId, teamId, matchSummary }) {
+  const ourTeam = S.teamMap[teamId] || null;
+  const oppName = (matchSummary && matchSummary.opposing_team_name) || (S.teamMap[matchSummary && matchSummary.opposing_team_id] && S.teamMap[matchSummary.opposing_team_id].name) || 'Unknown';
+  const oppLogo = (matchSummary && matchSummary.opposing_team_logo) || null;
+  const weAreRadiant = matchSummary && matchSummary.radiant;
+
+  $main.innerHTML = '<div class="match-detail-page"><div class="loading-screen" style="min-height:300px"><div class="loading-emblem"><div class="loading-ring"></div><div class="loading-ring loading-ring--2"></div><div class="loading-ring loading-ring--3"></div></div><p class="loading-text">Loading Match Data...</p></div></div>';
+
+  try {
+    const match = await api.fullMatch(matchId);
+
+    const radiantName = weAreRadiant ? (ourTeam ? ourTeam.name : 'Radiant') : oppName;
+    const direName   = weAreRadiant ? oppName : (ourTeam ? ourTeam.name : 'Dire');
+    const radiantLogo = weAreRadiant ? (ourTeam ? ourTeam.logo_url : null) : oppLogo;
+    const direLogo   = weAreRadiant ? oppLogo : (ourTeam ? ourTeam.logo_url : null);
+    const radWin = match.radiant_win;
+    const radScore = match.radiant_score || 0;
+    const direScore = match.dire_score || 0;
+
+    function teamLogoHtml(logoUrl, name, fallback) {
+      if (logoUrl) return '<img class="match-team-logo" src="' + esc(logoUrl) + '" alt="' + esc(name) + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
+        '<div class="match-team-logo-fb" style="display:none">' + esc((fallback||name||'?').slice(0,3)) + '</div>';
+      return '<div class="match-team-logo-fb">' + esc((fallback||name||'?').slice(0,3)) + '</div>';
+    }
+
+    // Draft
+    const allDraft = match.picks_bans || [];
+    const radPicks = allDraft.filter(pb => pb.is_pick && pb.team === 0).sort((a,b) => a.order-b.order);
+    const direPicks = allDraft.filter(pb => pb.is_pick && pb.team === 1).sort((a,b) => a.order-b.order);
+    const radBans  = allDraft.filter(pb => !pb.is_pick && pb.team === 0).sort((a,b) => a.order-b.order);
+    const direBans  = allDraft.filter(pb => !pb.is_pick && pb.team === 1).sort((a,b) => a.order-b.order);
+
+    function draftRowHtml(pb, isBan) {
+      const h = S.heroMap[pb.hero_id];
+      if (!h) return '';
+      return '<div class="draft-pick-row' + (isBan ? ' draft-pick-row--ban' : '') + '">' +
+        '<img class="draft-hero-img" src="' + heroCropUrl(h.name) + '" alt="' + esc(h.localized_name) + '" onerror="this.src=\'' + heroImgUrl(h.name) + '\'">' +
+        '<span class="draft-hero-name">' + esc(h.localized_name) + '</span>' +
+        '<span class="draft-order">' + (isBan ? 'BAN' : 'PICK') + '</span></div>';
+    }
+
+    const hasDraft = allDraft.length > 0;
+    function draftColHtml(picks, bans, label, color) {
+      return '<div class="draft-col"><div class="draft-team-label" style="color:' + color + '">' + label + '</div>' +
+        (picks.length ? '<div>' + picks.map(pb => draftRowHtml(pb, false)).join('') + '</div>' : '<div style="font-size:.8rem;color:var(--text-muted);padding:6px 0">No pick data</div>') +
+        (bans.length ? '<div class="draft-sub-label">Bans</div><div>' + bans.map(pb => draftRowHtml(pb, true)).join('') + '</div>' : '') +
+        '</div>';
+    }
+
+    // Players
+    const radPlayers = (match.players || []).filter(p => p.player_slot < 128);
+    const direPlayers = (match.players || []).filter(p => p.player_slot >= 128);
+
+    function playerPerfHtml(p) {
+      const h = S.heroMap[p.hero_id];
+      const pName = p.name || p.personaname || 'Unknown';
+      const nw = p.net_worth ? (p.net_worth >= 1000 ? (p.net_worth/1000).toFixed(1) + 'k' : p.net_worth) : '—';
+      return '<div class="player-perf-row">' +
+        (h ? '<img class="perf-hero-img" src="' + heroCropUrl(h.name) + '" alt="' + esc(h.localized_name) + '" onerror="this.src=\'' + heroImgUrl(h.name) + '\'">' : '<div class="perf-hero-img" style="background:var(--bg-card);border-radius:3px"></div>') +
+        '<div class="perf-info"><div class="perf-name">' + esc(pName) + '</div>' +
+        '<div class="perf-kda">' + (h ? esc(h.localized_name) + ' &middot; ' : '') + p.kills + '/' + p.deaths + '/' + p.assists + ' &middot; ' + (p.gold_per_min||0) + ' GPM</div></div>' +
+        '<div class="perf-right"><div class="perf-nw">' + nw + '</div><div class="perf-gpm">' + (p.xp_per_min||0) + ' XPM</div></div></div>';
+    }
+
+    const leagueName = match.league && match.league.name ? match.league.name : (matchSummary && matchSummary.league_name ? matchSummary.league_name : null);
+
+    $main.innerHTML =
+      '<div class="match-detail-page">' +
+      // ── Header ──────────────────────────────────────────────────────────────
+      '<div class="match-detail-header">' +
+      '<div class="match-teams">' +
+      '<div class="match-team ' + (radWin ? 'match-team--winner' : 'match-team--loser') + '">' +
+      teamLogoHtml(radiantLogo, radiantName, (weAreRadiant && ourTeam ? ourTeam.tag : null)) +
+      '<div class="match-team-name">' + esc(radiantName) + '</div>' +
+      '<div class="match-team-side">&#127807; Radiant</div></div>' +
+      '<div class="match-vs-block">' +
+      '<div class="match-score"><span class="' + (radWin ? 'score-win' : 'score-loss') + '">' + radScore + '</span>' +
+      '<span class="score-sep">:</span>' +
+      '<span class="' + (!radWin ? 'score-win' : 'score-loss') + '">' + direScore + '</span></div>' +
+      '<div class="match-result-label ' + (weAreRadiant === radWin ? 'match-result-label--win' : 'match-result-label--loss') + '">' +
+      (weAreRadiant === radWin ? 'VICTORY' : 'DEFEAT') + '</div></div>' +
+      '<div class="match-team ' + (!radWin ? 'match-team--winner' : 'match-team--loser') + '">' +
+      teamLogoHtml(direLogo, direName, (!weAreRadiant && ourTeam ? ourTeam.tag : null)) +
+      '<div class="match-team-name">' + esc(direName) + '</div>' +
+      '<div class="match-team-side">&#128293; Dire</div></div>' +
+      '</div>' +
+      '<div class="match-detail-meta">' +
+      '<div class="stat-chip"><span class="stat-chip__label">Duration</span><span class="stat-chip__value">' + fmtDur(match.duration) + '</span></div>' +
+      '<div style="font-size:.75rem;color:var(--text-muted)">' + fmtDate(match.start_time) + '</div>' +
+      (leagueName ? '<div style="font-size:.72rem;color:var(--gold-dark)">' + esc(leagueName) + '</div>' : '') +
+      '<div style="font-size:.68rem;color:var(--text-muted)">ID: ' + matchId + '</div>' +
+      '</div></div>' +
+      // ── Body ────────────────────────────────────────────────────────────────
+      '<div class="match-detail-body" style="display:grid;grid-template-columns:1fr;gap:24px;margin-top:24px">' +
+      // Draft
+      (hasDraft ?
+        '<section class="detail-section"><h2 class="section-title"><span class="section-title__icon">&#9876;</span> Draft</h2>' +
+        '<div class="match-detail-two-col">' +
+        draftColHtml(radPicks, radBans, '&#127807; ' + esc(radiantName), 'var(--win)') +
+        draftColHtml(direPicks, direBans, '&#128293; ' + esc(direName), 'var(--red-light)') +
+        '</div></section>'
+        : '<section class="detail-section"><h2 class="section-title"><span class="section-title__icon">&#9876;</span> Draft</h2><div class="empty-state">Draft data not available for this match.</div></section>') +
+      // Players
+      '<section class="detail-section"><h2 class="section-title"><span class="section-title__icon">&#128100;</span> Player Performance</h2>' +
+      '<div class="match-detail-two-col">' +
+      '<div class="perf-col"><div class="draft-team-label" style="color:var(--win)">&#127807; ' + esc(radiantName) + '</div>' +
+      (radPlayers.length ? radPlayers.map(playerPerfHtml).join('') : '<div class="empty-state">No player data.</div>') + '</div>' +
+      '<div class="perf-col"><div class="draft-team-label" style="color:var(--red-light)">&#128293; ' + esc(direName) + '</div>' +
+      (direPlayers.length ? direPlayers.map(playerPerfHtml).join('') : '<div class="empty-state">No player data.</div>') + '</div>' +
+      '</div></section>' +
+      '</div></div>';
+  } catch(e) {
+    $main.innerHTML = '<div class="match-detail-page"><div class="section-error">Failed to load match details: ' + esc(e.message) + '</div></div>';
+  }
+}
+
+// ─── Events ───────────────────────────────────────────────────────────────────
+$main.addEventListener('click', function(e) {
+  const teamCard = e.target.closest('.team-card[data-team-id]');
+  if (teamCard) { navigate('team', { teamId: +teamCard.dataset.teamId }); return; }
+
+  const playerCard = e.target.closest('.player-card[data-player]');
+  if (playerCard) { try { navigate('player', { player: JSON.parse(playerCard.dataset.player) }); } catch(err){} return; }
+
+  const heroCard = e.target.closest('.hero-stat-card[data-hero-id]');
+  if (heroCard) {
+    try {
+      const hero = S.heroMap[+heroCard.dataset.heroId];
+      if (hero) navigate('hero', { hero, player: JSON.parse(heroCard.dataset.player), heroStat: JSON.parse(heroCard.dataset.heroStat) });
+    } catch(err) {}
+    return;
+  }
+
+  const matchRow = e.target.closest('.match-row[data-match-id]');
+  if (matchRow) {
+    try {
+      const matchSummary = JSON.parse(matchRow.dataset.match);
+      navigate('match', { matchId: +matchRow.dataset.matchId, teamId: +matchRow.dataset.teamId, matchSummary });
+    } catch(err) {}
+    return;
+  }
+
+  const sortBtn = e.target.closest('.sort-btn[data-sort]');
+  if (sortBtn) { S.teamSort = sortBtn.dataset.sort; showTeamsView(); return; }
+});
+
+$main.addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter') return;
+  const card = e.target.closest('.team-card,.player-card,.hero-stat-card');
+  if (card) card.click();
+});
+
+$main.addEventListener('input', function(e) {
+  if (e.target.id === 'team-search')   { S.teamSearch = e.target.value; refreshTeamGrid(); }
+  if (e.target.id === 'region-filter') { S.teamRegion = e.target.value; refreshTeamGrid(); }
+});
+
+$back.addEventListener('click', goBack);
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+async function init() {
+  $main.innerHTML = '<div class="loading-screen"><div class="loading-emblem"><div class="loading-ring"></div><div class="loading-ring loading-ring--2"></div><div class="loading-ring loading-ring--3"></div></div><p class="loading-text">Summoning the Ancients...</p></div>';
+  try {
+    const [players, teams, heroes] = await Promise.all([api.proPlayers(), api.teams(), api.heroes()]);
+    S.teamMap = {};
+    teams.forEach(t => { S.teamMap[t.team_id] = t; });
+    S.playersByTeam = {};
+    players.forEach(p => { if (p.team_id) { S.playersByTeam[p.team_id] = S.playersByTeam[p.team_id] || []; S.playersByTeam[p.team_id].push(p); } });
+    S.activeTeams = teams.filter(t => S.playersByTeam[t.team_id]);
+    S.heroMap = {};
+    heroes.forEach(h => { S.heroMap[h.id] = h; });
+    S.navStack = [{ view: 'teams', payload: {} }];
+    render();
+  } catch(e) {
+    $main.innerHTML = '<div class="error-screen"><div class="error-icon">&#9888;</div><h2 class="error-title">Connection Failed</h2><p class="error-message">'+esc(e.message)+'</p><button class="btn btn--primary" id="retry-btn">Retry</button></div>';
+    var rb = document.getElementById('retry-btn');
+    if (rb) rb.addEventListener('click', init);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
